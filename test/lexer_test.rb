@@ -17,7 +17,9 @@ class LexerTest < Test::Unit::TestCase
   end
 
   def test_number
-    assert_equal [[:NUMBER, 1]], MERI::Lexer.new.tokenize(" 1  ")
+    assert_equal [[:NUMBER, -1.0]], MERI::Lexer.new.tokenize(" -1  ")
+    assert_equal [[:NUMBER, 1e2]], MERI::Lexer.new.tokenize(" 1e2")
+    assert_equal [[:NUMBER, 1E-2]], MERI::Lexer.new.tokenize(" 1e-2")
   end
 
   def test_string

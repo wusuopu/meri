@@ -31,8 +31,8 @@ module MERI
         elsif constant = chunk[/\A([A-Z]\w*)/, 1]
           tokens << [:CONSTANT, constant]
           i += constant.size
-        elsif number = chunk[/\A([0-9]+)/, 1]
-          tokens << [:NUMBER, number.to_i]
+        elsif number = chunk[/\A([-+]?(0|([1-9]\d*))(.\d+)?([eE][-+]?\d+)?)/, 1]
+          tokens << [:NUMBER, number.to_f]
           i += number.size
         elsif string = chunk[/\A"(((\\")|([^"]))*)"/, 1]
           # string with double quote
