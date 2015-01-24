@@ -2,7 +2,7 @@
 #-*- coding:utf-8 -*-
 
 
-$LOAD_PATH << '.'
+$LOAD_PATH << File.expand_path("..", __FILE__)
 
 require "test_helper"
 require "lexer"
