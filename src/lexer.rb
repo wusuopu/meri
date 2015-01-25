@@ -45,7 +45,7 @@ module MERI
         elsif newline = chunk[/\A(\n)/m, 1]
           tokens << [:NEWLINE, "\n"]
           i += newline.size + 1
-        elsif operator = chunk[/\A(\|\||&&|==|!=|<=|>=|->)/, 1]
+        elsif operator = chunk[/\A(\|\||&&|==|!=|<=|>=|\*\*|->)/, 1]
           tokens << [operator, operator]
           i += operator.size
         elsif chunk.match(/\A /)
