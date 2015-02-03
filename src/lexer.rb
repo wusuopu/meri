@@ -11,7 +11,7 @@ module MERI
     KEYWORDS = [
       'class', 'if', 'else',
       'true', 'false', 'nil',
-      'while', 'end'
+      'def', 'while', 'end'
     ]
     def tokenize code
       code.chomp!
@@ -44,7 +44,7 @@ module MERI
           tokens << [:STRING, string.gsub("\\'", "'")]
         elsif newline = chunk[/\A(\n)/m, 1]
           tokens << [:NEWLINE, "\n"]
-          i += newline.size + 1
+          i += newline.size
         elsif operator = chunk[/\A(\|\||&&|==|!=|<=|>=|\*\*|->)/, 1]
           tokens << [operator, operator]
           i += operator.size

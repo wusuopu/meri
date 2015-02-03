@@ -1,7 +1,8 @@
-class Parser
+class MERI::Parser
   
 token IF ELSE
 token TRUE FALSE NIL
+token DEF
 token CLASS WHILE END
 token IDENTIFIER CONSTANT NUMBER STRING NEWLINE
 
@@ -19,20 +20,20 @@ prechigh
   left    '||'
   right   '='
   left    ','
-  left    '->'
 preclow
 
 rule
   Stm:
-    /* */                               { result = Nodes.new([]) }
+    /* */                               { result = MERI::Nodes.new([]) }
   | Expressions                         { result = val[0] }
   ;
 
   Expressions:
-    Expression                          { result = Nodes.new(val) }
+    Expression                          { result = MERI::Nodes.new(val) }
+  | Terminator Expression               { result = MERI::Nodes.new(val[1]) }
   | Expressions Terminator Expression   { result = val[0] << val[2] }
   | Expressions Terminator              { result = val[0] }
-  | Terminator                          { result = Nodes.new([]) }
+  | Terminator                          { result = MERI::Nodes.new([]) }
   ;
 
   Expression:
@@ -54,17 +55,33 @@ rule
   ;
 
   Literal:
-    NUMBER                              { result = NumberNode.new(val[0]) }
-  | STRING                              { result = StringNode.new(val[0]) }
-  | TRUE                                { result = TrueNode.new() }
-  | FALSE                               { result = FalseNode.new() }
-  | NIL                                 { result = NilNode.new() }
+    NUMBER                              { result = MERI::NumberNode.new(val[0]) }
+  | STRING                              { result = MERI::StringNode.new(val[0]) }
+  | TRUE                                { result = MERI::TrueNode.new() }
+  | FALSE                               { result = MERI::FalseNode.new() }
+  | NIL                                 { result = MERI::NilNode.new() }
+  ;
+
+  Constant:
+    CONSTANT                            { result = MERI::ConstantNode.new(val[0]) }
+  ;
+
+  ConstantAssign:
+    CONSTANT '=' Expression            { result = MERI::ConstantAssignNode.new(val[0], val[2]) }
+  ;
+
+  Variable:
+    IDENTIFIER                          { result = MERI::VariableNode.new(val[0]) }
+  ;
+
+  VariableAssign:
+    IDENTIFIER '=' Expression          { result = MERI::VariableAssignNode.new(val[0], val[2]) }
   ;
 
   FunctionCall:
-  | IDENTIFIER Arguments                { result = FunctionCallNode.new(nil, val[0], val[1]) }
-  | Expression '.' IDENTIFIER           { result = FunctionCallNode.new(val[0], val[2], []) }
-  | Expression '.' IDENTIFIER Arguments { result = FunctionCallNode.new(val[0], val[2], val[3]) }
+  | IDENTIFIER Arguments                { result = MERI::FunctionCallNode.new(nil, val[0], val[1]) }
+  | Expression '.' IDENTIFIER           { result = MERI::FunctionCallNode.new(val[0], val[2], []) }
+  | Expression '.' IDENTIFIER Arguments { result = MERI::FunctionCallNode.new(val[0], val[2], val[3]) }
   ;
 
   Arguments:
@@ -79,40 +96,25 @@ rule
   ;
 
   Operator:
-    Expression '||' Expression          { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '&&' Expression          { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '==' Expression          { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '!=' Expression          { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '>' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '>=' Expression          { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '<' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '<=' Expression          { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '**' Expression          { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '+' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '-' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '*' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '/' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '%' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '|' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '&' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '^' Expression           { result = FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | '!' Expression                      { result = FunctionCallNode.new(val[1], val[0], []) }
-  ;
-
-  Constant:
-    CONSTANT                            { result = ConstantNode.new(val[0]) }
-  ;
-
-  ConstantAssign:
-    CONSTANT '=' Expressions            { result = ConstantAssignNode.new(val[0], val[2]) }
-  ;
-
-  Variable:
-    IDENTIFIER                          { result = VariableNode.new(val[0]) }
-  ;
-
-  VariableAssign:
-    IDENTIFIER '=' Expressions          { result = VariableAssignNode.new(val[0], val[2]) }
+    Expression '||' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '&&' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '==' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '!=' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '>' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '>=' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '<' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '<=' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '**' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '+' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '-' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '*' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '/' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '%' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '|' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '&' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '^' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '->' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
+  | '!' Expression                      { result = MERI::FunctionCallNode.new(val[1], val[0], []) }
   ;
 
   Block:
@@ -120,7 +122,7 @@ rule
   ;
 
   Function:
-    '(' Params ')' '->' Block           { result = FunctionNode.new(val[1], val[4]) }
+    DEF IDENTIFIER '(' Params ')' Block    { result = MERI::FunctionNode.new(val[1], val[3], val[5]) }
   ;
 
   Params:
@@ -130,11 +132,11 @@ rule
   ;
 
   While:
-    WHILE Expressions Block             { result = WhileNode.new(val[1], val[2]) }
+    WHILE Expression Block             { result = MERI::WhileNode.new(val[1], val[2]) }
   ;
 
   If:
-    IF Expressions Block                { result = IfNode.new(val[1], val[2]) }
+    IF Expression Block                { result = MERI::IfNode.new(val[1], val[2]) }
   ;
 end
 
@@ -146,10 +148,16 @@ end
 
 ---- inner ----
   def parse(code)
-    @tokens = Lexer.new.tokenize code
+    @tokens = MERI::Lexer.new.tokenize code
     do_parse
   end
 
   def next_token
     @tokens.shift
+  end
+
+  def on_error(error_token_id, error_value, value_stack)
+    puts "error_token_id: #{error_token_id}"
+    puts "error_value: #{error_value}"
+    puts "value_stack: #{value_stack}"
   end
