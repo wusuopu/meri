@@ -32,4 +32,8 @@ class LexerTest < Test::Unit::TestCase
     assert_equal [["||", "||"]], MERI::Lexer.new.tokenize('||')
     assert_equal [["->", "->"]], MERI::Lexer.new.tokenize('->')
   end
+
+  def test_comment
+    assert_equal [[:NUMBER, 1], [:NEWLINE, "\n"], [:STRING, 'hello']], MERI::Lexer.new.tokenize("1 ; this is comments\n'hello'")
+  end
 end

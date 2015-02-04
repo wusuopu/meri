@@ -1,6 +1,6 @@
 desc "Generating parser using racc."
 task :racc do
-  `racc -o src/parser.rb src/grammar.y`
+  `bundle exec racc -v -g -o src/parser.rb src/grammar.y`
 end
 
 desc "Run testing."

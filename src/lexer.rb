@@ -11,15 +11,24 @@ module MERI
     KEYWORDS = [
       'class', 'if', 'else',
       'true', 'false', 'nil',
-      'def', 'while', 'end'
+      'def', 'while', 'end', 'return'
     ]
     def tokenize code
       code.chomp!
       tokens = []
+      state = :BEGIN
 
       i = 0
       while i < code.size
         chunk = code[i..-1]
+        if state == :COMMENT
+          if chunk[0] == "\n"
+            state = :BEGIN
+            tokens << [:NEWLINE, "\n"]
+          end
+          i += 1
+          next
+        end
 
         if identifier = chunk[/\A([_a-z]\w*)/, 1]
           if KEYWORDS.include? identifier
@@ -49,6 +58,9 @@ module MERI
           tokens << [operator, operator]
           i += operator.size
         elsif chunk.match(/\A /)
+          i += 1
+        elsif chunk[0] == ';'
+          state = :COMMENT
           i += 1
         else
           value = chunk[0, 1]
