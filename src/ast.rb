@@ -36,27 +36,52 @@ module MERI
     end
   end
 
-  class FunctionCallNode < Struct.new(:receiver, :method, :arguments)
-  end
-
-  class ConstantNode < Struct.new(:name)
-  end
-
-  class ConstantAssignNode < Struct.new(:name, :value)
-  end
-
-  class VariableNode < Struct.new(:name)
-  end
-
-  class VariableAssignNode < Struct.new(:name, :value)
-  end
-
-  class FunctionNode < Struct.new(:name, :params, :body)
+  # Call function
+  class CallNode < Struct.new(:receiver, :method, :arguments)
   end
 
   class WhileNode < Struct.new(:condition, :body)
   end
 
-  class IfNode < Struct.new(:condition, :body)
+  class IfNode < Struct.new(:condition, :body, :else_body)
+    def add_else else_body
+      self['else_body'] = else_body
+      self
+    end
+  end
+
+  # ------------------------
+  class ReturnNode < Struct.new(:value)
+  end
+
+  class CodeNode < Struct.new(:params, :body)
+  end
+
+  class AssignNode < Struct.new(:name, :value)
+    attr_reader :value_type
+    TYPE_CONST = 1
+    TYPE_VAR   = 2
+    def initialize name, value
+      super(name, value)
+      if name[0] == name[0].upcase
+        @value_type = TYPE_CONST
+      else
+        @value_type = TYPE_VAR
+      end
+    end
+  end
+
+  class ValueNode < Struct.new(:name)
+    attr_reader :value_type
+    TYPE_CONST = 1
+    TYPE_VAR   = 2
+    def initialize name
+      super(name)
+      if name[0] == name[0].upcase
+        @value_type = TYPE_CONST
+      else
+        @value_type = TYPE_VAR
+      end
+    end
   end
 end

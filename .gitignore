@@ -46,3 +46,4 @@ build/
 .rvmrc
 
 src/parser.rb
+src/parser.output

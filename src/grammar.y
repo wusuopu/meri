@@ -3,7 +3,7 @@ class MERI::Parser
 token IF ELSE
 token TRUE FALSE NIL
 token DEF
-token CLASS WHILE END
+token CLASS WHILE END RETURN
 token IDENTIFIER CONSTANT NUMBER STRING NEWLINE
 
 # operator precedence
@@ -23,120 +23,144 @@ prechigh
 preclow
 
 rule
-  Stm:
-    /* */                               { result = MERI::Nodes.new([]) }
-  | Expressions                         { result = val[0] }
+  Root:
+    /* */                               { result = Nodes.new([]) }
+  | Body                                { result = val[0] }
   ;
 
-  Expressions:
-    Expression                          { result = MERI::Nodes.new(val) }
-  | Terminator Expression               { result = MERI::Nodes.new(val[1]) }
-  | Expressions Terminator Expression   { result = val[0] << val[2] }
-  | Expressions Terminator              { result = val[0] }
-  | Terminator                          { result = MERI::Nodes.new([]) }
+  Body:
+    Line                                { result = Nodes.new(val) }
+  | Body Terminator Line                { result = val[0] << val[2] }
+  | Body Terminator                     { result = val[0] }
+  ;
+
+  Line:
+    Expression
+  | Statement
+  ;
+
+  Statement:
+    Return
   ;
 
   Expression:
-    Literal
-  | FunctionCall
-  | Operator
-  | Constant
-  | ConstantAssign
-  | Variable
-  | VariableAssign
-  | Function
-  | While
+    Value
+  | Assign
+  | Invocation
+  | Code
+  | Operation
   | If
-  | '(' Expression ')'                  { result = val[1] }
+  | While
+  ;
+
+  AlphaNumberic:
+    NUMBER                              { result = NumberNode.new(val[0]) }
+  | STRING                              { result = StringNode.new(val[0]) }
+  ;
+  Literal:
+    AlphaNumberic                       { result = val[0] }
+  | TRUE                                { result = TrueNode.new() }
+  | FALSE                               { result = FalseNode.new() }
+  | NIL                                 { result = NilNode.new() }
+  ;
+  Value:
+    Literal
+  | AssignValue
+  | Parenthetical
+  ;
+
+  Return:
+    RETURN Expression                   { result = ReturnNode.new(val[1]) }
+  | RETURN                              { result = ReturnNode.new(NilNode.new()) }
   ;
 
   Terminator:
     NEWLINE
   ;
 
-  Literal:
-    NUMBER                              { result = MERI::NumberNode.new(val[0]) }
-  | STRING                              { result = MERI::StringNode.new(val[0]) }
-  | TRUE                                { result = MERI::TrueNode.new() }
-  | FALSE                               { result = MERI::FalseNode.new() }
-  | NIL                                 { result = MERI::NilNode.new() }
+  Operation:
+    Expression '||' Expression          { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '&&' Expression          { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '==' Expression          { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '!=' Expression          { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '>' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '>=' Expression          { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '<' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '<=' Expression          { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '**' Expression          { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '+' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '-' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '*' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '/' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '%' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '|' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '&' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression '^' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | '!' Expression                      { result = CallNode.new(val[1], val[0], []) }
   ;
 
-  Constant:
-    CONSTANT                            { result = MERI::ConstantNode.new(val[0]) }
+  Assign:
+    Assignable '=' Expression           { result = AssignNode.new(val[0], val[2])}
+  | Assignable '=' Terminator Expression{ result = AssignNode.new(val[0], val[3])}
+  | Assignable '=' '{' Expression '}'   { result = AssignNode.new(val[0], val[3])}
+  ;
+  AssignValue:
+    Assignable                          { result = ValueNode.new(val[0]) }
+  ;
+  Assignable:
+    IDENTIFIER
+  | CONSTANT
   ;
 
-  ConstantAssign:
-    CONSTANT '=' Expression            { result = MERI::ConstantAssignNode.new(val[0], val[2]) }
+  Block:
+    '{' '}'                             { result = Nodes.new([]) }
+  | '{' Terminator '}'                  { result = Nodes.new([]) }
+  | '{' Body '}'                        { result = val[1] }
+  | '{' Terminator Body '}'             { result = val[2] }
+  ;
+  Code:
+    '(' ParamList ')' FuncGlyph Block   { result = CodeNode.new(val[1], val[4]) }
+  | FuncGlyph Block                     { result = CodeNode.new([], val[1]) }
+  ;
+  FuncGlyph:
+    '->'
+  ;
+  ParamList:
+    /* */                               { result = [] }
+  | IDENTIFIER                          { result = val }
+  | ParamList ',' IDENTIFIER            { result = val[0] << val[2] }
   ;
 
-  Variable:
-    IDENTIFIER                          { result = MERI::VariableNode.new(val[0]) }
+  Invocation:
+    Value Arguments                     { result = CallNode.new(nil, val[0], val[1]) }
+  | Invocation Arguments                { result = CallNode.new(nil, val[0], val[1]) }
   ;
-
-  VariableAssign:
-    IDENTIFIER '=' Expression          { result = MERI::VariableAssignNode.new(val[0], val[2]) }
-  ;
-
-  FunctionCall:
-  | IDENTIFIER Arguments                { result = MERI::FunctionCallNode.new(nil, val[0], val[1]) }
-  | Expression '.' IDENTIFIER           { result = MERI::FunctionCallNode.new(val[0], val[2], []) }
-  | Expression '.' IDENTIFIER Arguments { result = MERI::FunctionCallNode.new(val[0], val[2], val[3]) }
-  ;
-
   Arguments:
     '(' ')'                             { result = [] }
   | '(' ArgList ')'                     { result = val[1] }
-  | ArgList                             { result = val[0] }
   ;
-
   ArgList:
     Expression                          { result = val }
   | ArgList ',' Expression              { result = val[0] << val[2] }
   ;
 
-  Operator:
-    Expression '||' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '&&' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '==' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '!=' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '>' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '>=' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '<' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '<=' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '**' Expression          { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '+' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '-' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '*' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '/' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '%' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '|' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '&' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '^' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | Expression '->' Expression           { result = MERI::FunctionCallNode.new(val[0], val[1], [val[2]]) }
-  | '!' Expression                      { result = MERI::FunctionCallNode.new(val[1], val[0], []) }
+  Parenthetical:
+    '(' Expression ')'                        { result = val[1] }
+  | '(' Terminator Expression ')'             { result = val[2] }
   ;
 
-  Block:
-    '{' Expressions '}'                 { result = val[1] }
-  ;
 
-  Function:
-    DEF IDENTIFIER '(' Params ')' Block    { result = MERI::FunctionNode.new(val[1], val[3], val[5]) }
+  IfBlock:
+    IF Expression Block                 { result = IfNode.new(val[1], val[2]) }
+  | IfBlock ELSE IF Expression Block    { result = val[0].add_else(IfNode.new(val[3], val[4])) }
   ;
-
-  Params:
-    /* */                               { result = [] }
-  | IDENTIFIER                          { result = val }
-  | Params ',' IDENTIFIER               { result = val[0] << val[2] }
+  If:
+    IfBlock                             { result = val[0] }
+  | IfBlock ELSE Block                  { result = val[0].add_else(val[2]) }
   ;
 
   While:
-    WHILE Expression Block             { result = MERI::WhileNode.new(val[1], val[2]) }
-  ;
-
-  If:
-    IF Expression Block                { result = MERI::IfNode.new(val[1], val[2]) }
+    WHILE Expression Block              { result = WhileNode.new(val[1], val[2]) }
   ;
 end
 
@@ -148,7 +172,8 @@ end
 
 ---- inner ----
   def parse(code)
-    @tokens = MERI::Lexer.new.tokenize code
+    #@yydebug = true
+    @tokens = Lexer.new.tokenize code
     do_parse
   end
 
