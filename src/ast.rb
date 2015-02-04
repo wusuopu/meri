@@ -57,31 +57,34 @@ module MERI
   class CodeNode < Struct.new(:params, :body)
   end
 
+  ASSIGN_TYPE_CONST = 1
+  ASSIGN_TYPE_VAR   = 2
+
   class AssignNode < Struct.new(:name, :value)
     attr_reader :value_type
-    TYPE_CONST = 1
-    TYPE_VAR   = 2
     def initialize name, value
       super(name, value)
       if name[0] == name[0].upcase
-        @value_type = TYPE_CONST
+        @value_type = ASSIGN_TYPE_CONST
       else
-        @value_type = TYPE_VAR
+        @value_type = ASSIGN_TYPE_VAR
       end
     end
   end
 
   class ValueNode < Struct.new(:name)
     attr_reader :value_type
-    TYPE_CONST = 1
-    TYPE_VAR   = 2
     def initialize name
       super(name)
       if name[0] == name[0].upcase
-        @value_type = TYPE_CONST
+        @value_type = ASSIGN_TYPE_CONST
       else
-        @value_type = TYPE_VAR
+        @value_type = ASSIGN_TYPE_VAR
       end
     end
+  end
+
+  # TODO
+  class ListNode
   end
 end

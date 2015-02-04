@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+#-*- coding:utf-8 -*-
+
+$LOAD_PATH << File.dirname(__FILE__) + '/src'
+
+require "interpreter"
+
+interpreter = MERI::Interpreter.new
+
+if ARGV.length > 0
+  interpreter.eval File.read(ARGV[0])
+else
+  puts "Usage: meri <file>"
+end

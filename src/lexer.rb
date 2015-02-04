@@ -23,7 +23,7 @@ module MERI
         chunk = code[i..-1]
         if state == :COMMENT
           if chunk[0] == "\n"
-            state = :BEGIN
+            state = :NEWLINE
             tokens << [:NEWLINE, "\n"]
           end
           i += 1
@@ -52,8 +52,13 @@ module MERI
           i += string.size + 2
           tokens << [:STRING, string.gsub("\\'", "'")]
         elsif newline = chunk[/\A(\n)/m, 1]
-          tokens << [:NEWLINE, "\n"]
           i += newline.size
+          # filter redundant newline char
+          if state != :NEWLINE
+            state = :NEWLINE
+            tokens << [:NEWLINE, "\n"]
+          end
+          next
         elsif operator = chunk[/\A(\|\||&&|==|!=|<=|>=|\*\*|->)/, 1]
           tokens << [operator, operator]
           i += operator.size
@@ -67,6 +72,7 @@ module MERI
           tokens << [value, value]
           i += 1
         end
+        state = :BEGIN
       end
 
       tokens
