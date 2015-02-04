@@ -67,6 +67,7 @@ module MERI
         elsif chunk[0] == ';'
           state = :COMMENT
           i += 1
+          next
         else
           value = chunk[0, 1]
           tokens << [value, value]
