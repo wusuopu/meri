@@ -101,6 +101,10 @@ module MERI
       Constants['Number'].new_with_value(result)
     end
   end
+    Constants['String'].define_method '+' do |receiver, args|
+      result = receiver.ruby_value.+ args[0].ruby_value
+      Constants['String'].new_with_value(result)
+    end
   #Constants['ARGV'] = []
   #ARGV.each do |v|
     #Constants['ARGV'] << Constants['String'].new_with_value(v)
