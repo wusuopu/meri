@@ -47,3 +47,4 @@ build/
 
 src/parser.rb
 src/parser.output
+src/lexer.rb

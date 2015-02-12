@@ -3,5 +3,6 @@
 #
 guard :shell do
   watch('src/grammar.y') {|m| `rake racc` }
+  watch('src/lexer.rex') {|m| `rake rex` }
   watch(/test\/.*_test.rb/) {|m| `bundle exec ruby #{m[0]}` }
 end
