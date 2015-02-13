@@ -3,7 +3,8 @@ class MERI::Parser
 token IF ELSE
 token TRUE FALSE NIL
 token DEF
-token CLASS WHILE END RETURN
+token BLOCK_BEGIN BLOCK_END
+token CLASS WHILE RETURN
 token IDENTIFIER CONSTANT NUMBER STRING NEWLINE
 
 # operator precedence
@@ -113,10 +114,10 @@ rule
   ;
 
   Block:
-    '{' '}'                             { result = Nodes.new([]) }
-  | '{' Terminator '}'                  { result = Nodes.new([]) }
-  | '{' Body '}'                        { result = val[1] }
-  | '{' Terminator Body '}'             { result = val[2] }
+    BLOCK_BEGIN BLOCK_END               { result = Nodes.new([]) }
+  | BLOCK_BEGIN Terminator BLOCK_END    { result = Nodes.new([]) }
+  | BLOCK_BEGIN Body BLOCK_END          { result = val[1] }
+  | BLOCK_BEGIN Terminator Body BLOCK_END     { result = val[2] }
   ;
   Code:
     '(' ParamList ')' FuncGlyph Block   { result = CodeNode.new(val[1], val[4]) }

@@ -36,4 +36,15 @@ class LexerTest < Test::Unit::TestCase
   def test_comment
     assert_equal [[:NUMBER, 1], [:NEWLINE, "\n"], [:STRING, 'hello']], MERI::Lexer.new.tokenize("1 ; this is comments\n'hello'")
   end
+
+  def test_block
+    code = "()->\nend"
+    assert_equal [["(", "("], [")", ")"], ["->", "->"], [:BLOCK_BEGIN, "\n"], [:BLOCK_END, "end"]], MERI::Lexer.new.tokenize(code)
+
+    code = "if a\n\nelse\nend"
+    assert_equal [
+      [:IF, "if"], [:IDENTIFIER, "a"], [:BLOCK_BEGIN, "\n"],
+      [:BLOCK_END, "else"], [:ELSE, "else"], [:NEWLINE, "\n"], [:BLOCK_END, "end"]
+    ], MERI::Lexer.new.tokenize(code)
+  end
 end

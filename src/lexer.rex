@@ -20,19 +20,23 @@ rule
   :COMMENT      .*(?=$)           { [:COMMENT, text] }
 
                 while             {
-  state_stack << :WHILE
+  @block_stack << :WHILE
   [:WHILE, text]
                 }
                 if                {
-  state_stack << :IF
+  @block_stack << :IF
   [:IF, text]
                 }
                 else              {
-  state_stack << :ELSE
-  [:ELSE, text]
+  if @last_token && (@last_token[0] == :NEWLINE || @last_token[0] == :BLOCK_BEGIN)
+    @ss.pos -= text.size
+    [:BLOCK_END, text]
+  else
+    [:ELSE, text]
+  end
                 }
                 end               {
-  [:END, text]
+  [:BLOCK_END, text]
                 }
                 true              {
   [:TRUE, text]
@@ -57,16 +61,20 @@ rule
   [:NUMBER, text.to_f]
                 }
                 "((\\")|([^"]))*" {
-  [:STRING, text.gsub('\"', '"')[1..-2]]
+  [:STRING, eval(text)]
                 }
                 '((\\')|([^']))*' {
-  [:STRING, text.gsub("\\'", "'")[1..-2]]
+  [:STRING, eval(text)]
                 }
 
                 \n                {
   _newline_action
                 }
-                \|\||&&|==|!=|<=|>=|\*\*|->                 {
+                ->                {
+  @block_stack << :FUNCTION
+  [text, text]
+                }
+                \|\||&&|==|!=|<=|>=|\*\*                    {
   [text, text]
                 }
 
@@ -75,13 +83,13 @@ rule
 
 
 inner
-  attr_reader   :state_stack, :last_token
+  attr_reader   :block_stack, :last_token
 
   def scan_setup(str)
     @ss = StringScanner.new(str)
     @lineno =  1
     @state  = nil
-    @state_stack = []
+    @block_stack = []
     @last_token = nil
   end
 
@@ -114,11 +122,22 @@ inner
   end
 
   def _newline_action
-    if @last_token && @last_token[0] == :NEWLINE
-      nil
-    else
-      [:NEWLINE, "\n"]
+    if !@last_token
+      # skip the header blank line
+      return nil
     end
+    token = @last_token[0]
+    if token == :NEWLINE || token == :BLOCK_BEGIN
+      # skip continuous blank line
+      return nil
+    end
+
+    block_state = @block_stack.pop
+    block_keywords = [:IF, :ELSE, :WHILE, :FUNCTION]
+    if block_state && block_keywords.include?(block_state)
+      return [:BLOCK_BEGIN, "\n"]
+    end
+    [:NEWLINE, "\n"]
   end
 end
 end
