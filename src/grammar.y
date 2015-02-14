@@ -120,14 +120,15 @@ rule
   ;
   Code:
     '(' ParamList ')' FuncGlyph Block   { result = CodeNode.new(val[1], val[4]) }
+  | '(' IDENTIFIER ')' FuncGlyph Block  { result = CodeNode.new([val[1]], val[4]) }
   | FuncGlyph Block                     { result = CodeNode.new([], val[1]) }
+  | '(' ')' FuncGlyph Block             { result = CodeNode.new([], val[3]) }
   ;
   FuncGlyph:
     '->'
   ;
   ParamList:
-    /* */                               { result = [] }
-  | IDENTIFIER                          { result = val }
+    IDENTIFIER ',' IDENTIFIER           { result = [val[0], val[2]] }
   | ParamList ',' IDENTIFIER            { result = val[0] << val[2] }
   ;
 

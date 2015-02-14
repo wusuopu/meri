@@ -81,14 +81,17 @@ module MERI
         value.call method, evaluated_arguments
       else
         value = local_context.current_self
-        method.eval(local_context).call value, evaluated_arguments
+        local_method = method.eval(local_context)
+        raise "Method not found: #{method.name}" if local_method.nil?
+        raise "#{method.name} is not callable" if ![MethodObject, Proc].include?(local_method.class)
+        local_method.call value, evaluated_arguments
       end
     end
   end
 
   class CodeNode
     def eval context
-      MethodObject.new params, body
+      MethodObject.new params, body, context
     end
   end
 

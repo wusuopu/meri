@@ -24,13 +24,15 @@ module MERI
   end
 
   class MethodObject < BaseObject
-    def initialize formal_params=[], body=nil
+    def initialize formal_params=[], body=nil, parent_context={}
       @formal_params = formal_params
       @body = body
+      @parent_context = parent_context
     end
     def call receiver, args
       return nil if !@body
       context = Context.new receiver
+      context.locals.merge! @parent_context.locals
       @formal_params.each_with_index do |param, index|
         context.locals[param] = args[index]
       end
@@ -83,7 +85,7 @@ module MERI
   # built-in object
   Constants[true] = Constants['TrueClass'].new_with_value(true)
   Constants[false] = Constants['FalseClass'].new_with_value(false)
-  Constants[nil] = Constants['NilClass'].new_with_value(nil)
+  Constants[nil] = Constants['NilClass'].new_with_value('nil')
 
   # built-in method
   # TODO
@@ -93,6 +95,7 @@ module MERI
       print(arg.ruby_value, " ")
     end
     print("\n")
+    Constants[nil]
   }
 
   ['+', '-', '*', '/', '%', '**'].each do |method|
@@ -101,10 +104,12 @@ module MERI
       Constants['Number'].new_with_value(result)
     end
   end
-    Constants['String'].define_method '+' do |receiver, args|
-      result = receiver.ruby_value.+ args[0].ruby_value
+  ['+', '*'].each do |method|
+    Constants['String'].define_method method do |receiver, args|
+      result = receiver.ruby_value.send method, args[0].ruby_value
       Constants['String'].new_with_value(result)
     end
+  end
   #Constants['ARGV'] = []
   #ARGV.each do |v|
     #Constants['ARGV'] << Constants['String'].new_with_value(v)
