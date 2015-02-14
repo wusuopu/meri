@@ -28,12 +28,10 @@ rule
   [:IF, text]
                 }
                 else              {
-  if @last_token && (@last_token[0] == :NEWLINE || @last_token[0] == :BLOCK_BEGIN)
-    @ss.pos -= text.size
-    [:BLOCK_END, text]
-  else
-    [:ELSE, text]
-  end
+  _else_block_action text, :ELSE
+                }
+                elif              {
+  _else_block_action text, :ELIF
                 }
                 end               {
   [:BLOCK_END, text]
@@ -41,7 +39,7 @@ rule
                 true              {
   [:TRUE, text]
                 }
-                false              {
+                false             {
   [:FALSE, text]
                 }
                 nil               {
@@ -74,6 +72,30 @@ rule
   @block_stack << :FUNCTION
   [text, text]
                 }
+                {                 {
+  @brace_level += 1
+  [text, text]
+                }
+                }                 {
+  @brace_level -= 1
+  [text, text]
+                }
+                \[                {
+  @bracket_level += 1
+  [text, text]
+                }
+                \]                {
+  @bracket_level -= 1
+  [text, text]
+                }
+                \(                {
+  @parenthesis_level += 1
+  [text, text]
+                }
+                \)                {
+  @parenthesis_level -= 1
+  [text, text]
+                }
                 \|\||&&|==|!=|<=|>=|\*\*                    {
   [text, text]
                 }
@@ -91,6 +113,9 @@ inner
     @state  = nil
     @block_stack = []
     @last_token = nil
+    @parenthesis_level = 0
+    @bracket_level = 0
+    @brace_level = 0
   end
 
   def next_token
@@ -132,12 +157,34 @@ inner
       return nil
     end
 
+    if @parenthesis_level != 0 || @bracket_level != 0 || @brace_level != 0
+      return nil
+    end
+    operator_list = [
+      "||", "&&", "==", "!=", "<=", ">=", "<", ">",
+      "**", "+", "-", "*", "/", "%", "|", "&", "^",
+      ",", "="
+    ]
+    if operator_list.include? token
+      return nil
+    end
+
     block_state = @block_stack.pop
-    block_keywords = [:IF, :ELSE, :WHILE, :FUNCTION]
+    block_keywords = [:IF, :ELSE, :ELIF, :WHILE, :FUNCTION]
     if block_state && block_keywords.include?(block_state)
       return [:BLOCK_BEGIN, "\n"]
     end
     [:NEWLINE, "\n"]
+  end
+
+  def _else_block_action text, symbol
+    if @last_token && (@last_token[0] == :NEWLINE || @last_token[0] == :BLOCK_BEGIN)
+      @ss.pos -= text.size
+      return [:BLOCK_END, text]
+    else
+      @block_stack << symbol
+      return [symbol, text]
+    end
   end
 end
 end

@@ -49,11 +49,13 @@ class ParserTest < Test::Unit::TestCase
 
   def test_if
 code = <<EOF
-if(a > b && ( a > c )){
+if(a > b && ( a > c ))
 1
-} else {
+elif b > c
 2
-}
+else
+3
+end
 EOF
     assert_equal Nodes.new([
       IfNode.new(
@@ -62,15 +64,21 @@ EOF
           '&&', [CallNode.new(
             ValueNode.new('a'), '>', [ValueNode.new('c')]
           )]
-      ), Nodes.new([NumberNode.new(1.0)]), Nodes.new([NumberNode.new(2.0)]))
+        ), Nodes.new([NumberNode.new(1.0)]),
+        IfNode.new(
+          CallNode.new(ValueNode.new('b'), '>', [ValueNode.new('c')]),
+          Nodes.new([NumberNode.new(2.0)]),
+          Nodes.new([NumberNode.new(3.0)])
+        )
+      )
     ]), Parser.new.parse(code)
   end
 
   def test_function
 code = <<EOF
-a = (a, b) -> {
+a = (a, b) ->
   a + b
-}
+end
 EOF
     assert_equal Nodes.new([
       AssignNode.new('a', CodeNode.new(['a', 'b'], Nodes.new([
@@ -81,9 +89,9 @@ EOF
 
   def test_while
 code = <<EOF
-while (a > b) {
+while (a > b)
 1
-}
+end
 EOF
     assert_equal Nodes.new([
       WhileNode.new(

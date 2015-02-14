@@ -41,10 +41,16 @@ class LexerTest < Test::Unit::TestCase
     code = "()->\nend"
     assert_equal [["(", "("], [")", ")"], ["->", "->"], [:BLOCK_BEGIN, "\n"], [:BLOCK_END, "end"]], MERI::Lexer.new.tokenize(code)
 
-    code = "if a\n\nelse\nend"
+    code = "if (a > b && a > c\n\t|| a > d)\nelse\nend"
     assert_equal [
-      [:IF, "if"], [:IDENTIFIER, "a"], [:BLOCK_BEGIN, "\n"],
-      [:BLOCK_END, "else"], [:ELSE, "else"], [:NEWLINE, "\n"], [:BLOCK_END, "end"]
+      [:IF, "if"], ["(", "("], [:IDENTIFIER, "a"],
+      [">", ">"], [:IDENTIFIER, "b"], ["&&", "&&"],
+      [:IDENTIFIER, "a"], [">", ">"], [:IDENTIFIER, "c"],
+      ["||", "||"], [:IDENTIFIER, "a"],
+      [">", ">"], [:IDENTIFIER, "d"], [")", ")"],
+      [:BLOCK_BEGIN, "\n"],
+      [:BLOCK_END, "else"], [:ELSE, "else"],
+      [:BLOCK_BEGIN, "\n"], [:BLOCK_END, "end"]
     ], MERI::Lexer.new.tokenize(code)
   end
 end

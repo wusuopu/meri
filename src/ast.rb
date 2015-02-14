@@ -45,7 +45,11 @@ module MERI
 
   class IfNode < Struct.new(:condition, :body, :else_body)
     def add_else else_body
-      self['else_body'] = else_body
+      if self['else_body'].is_a? IfNode
+        self['else_body'].add_else else_body
+      else
+        self['else_body'] = else_body
+      end
       self
     end
   end

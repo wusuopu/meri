@@ -1,8 +1,7 @@
 class MERI::Parser
   
-token IF ELSE
+token IF ELSE ELIF
 token TRUE FALSE NIL
-token DEF
 token BLOCK_BEGIN BLOCK_END
 token CLASS WHILE RETURN
 token IDENTIFIER CONSTANT NUMBER STRING NEWLINE
@@ -153,7 +152,7 @@ rule
 
   IfBlock:
     IF Expression Block                 { result = IfNode.new(val[1], val[2]) }
-  | IfBlock ELSE IF Expression Block    { result = val[0].add_else(IfNode.new(val[3], val[4])) }
+  | IfBlock ELIF Expression Block       { result = val[0].add_else(IfNode.new(val[2], val[3])) }
   ;
   If:
     IfBlock                             { result = val[0] }
