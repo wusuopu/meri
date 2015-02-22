@@ -3,6 +3,7 @@ class MERI::Parser
 token IF ELSE ELIF
 token TRUE FALSE NIL
 token BLOCK_BEGIN BLOCK_END
+token CALL_BEGIN CALL_END
 token CLASS WHILE RETURN
 token IDENTIFIER CONSTANT NUMBER STRING NEWLINE
 
@@ -101,7 +102,6 @@ rule
 
   Assign:
     Assignable '=' Expression           { result = AssignNode.new(val[0], val[2])}
-  | Assignable '=' Terminator Expression{ result = AssignNode.new(val[0], val[3])}
   | Assignable '=' '{' Expression '}'   { result = AssignNode.new(val[0], val[3])}
   ;
   AssignValue:
@@ -114,9 +114,7 @@ rule
 
   Block:
     BLOCK_BEGIN BLOCK_END               { result = Nodes.new([]) }
-  | BLOCK_BEGIN Terminator BLOCK_END    { result = Nodes.new([]) }
   | BLOCK_BEGIN Body BLOCK_END          { result = val[1] }
-  | BLOCK_BEGIN Terminator Body BLOCK_END     { result = val[2] }
   ;
   Code:
     '(' ParamList ')' FuncGlyph Block   { result = CodeNode.new(val[1], val[4]) }
@@ -137,8 +135,8 @@ rule
   | Invocation Arguments                { result = CallNode.new(nil, val[0], val[1]) }
   ;
   Arguments:
-    '(' ')'                             { result = [] }
-  | '(' ArgList ')'                     { result = val[1] }
+    CALL_BEGIN CALL_END                 { result = [] }
+  | CALL_BEGIN ArgList CALL_END         { result = val[1] }
   ;
   ArgList:
     Expression                          { result = val }
@@ -147,7 +145,6 @@ rule
 
   Parenthetical:
     '(' Expression ')'                        { result = val[1] }
-  | '(' Terminator Expression ')'             { result = val[2] }
   ;
 
 

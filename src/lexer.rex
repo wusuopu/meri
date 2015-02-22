@@ -5,7 +5,7 @@
 module MERI
 class Lexer
 macro
-  BLANK         \s+
+  BLANK         [\ \t\r\f\v]+
   REMARK        ;
 
 rule
@@ -50,19 +50,19 @@ rule
                 }
 
                 [_a-z]\w*         {
-  [:IDENTIFIER, text]
+  _call_begin_action [:IDENTIFIER, text], text
                 }
                 [A-Z]\w*          {
-  [:CONSTANT, text]
+  _call_begin_action [:CONSTANT, text], text
                 }
                 [-+]?(0|([1-9]\d*))(.\d+)?([eE][-+]?\d+)?   {
-  [:NUMBER, text.to_f]
+  _call_begin_action [:NUMBER, text.to_f], text
                 }
                 "((\\")|([^"]))*" {
-  [:STRING, eval(text)]
+  _call_begin_action [:STRING, eval(text)], text
                 }
                 '((\\')|([^']))*' {
-  [:STRING, eval(text)]
+  _call_begin_action [:STRING, eval(text)], text
                 }
 
                 \n                {
@@ -74,7 +74,7 @@ rule
                 }
                 {                 {
   @brace_level += 1
-  [text, text]
+  _call_begin_action [text, text], text
                 }
                 }                 {
   @brace_level -= 1
@@ -82,7 +82,7 @@ rule
                 }
                 \[                {
   @bracket_level += 1
-  [text, text]
+  _call_begin_action [text, text], text
                 }
                 \]                {
   @bracket_level -= 1
@@ -90,11 +90,36 @@ rule
                 }
                 \(                {
   @parenthesis_level += 1
-  [text, text]
+  if @last_token && (
+      @last_token[1] == ')' || @last_token[1] == ']' || @last_token[1] == '}' ||
+      @last_token[0] == :IDENTIFIER || @last_token[0] == :CONSTANT
+    )
+      @call_parenthesis_stack << [:CALL_PARENTHESIS, @parenthesis_level, @ss.pos]
+      [:CALL_BEGIN, '(']
+  else
+    [text, text]
+  end
                 }
                 \)                {
-  @parenthesis_level -= 1
-  [text, text]
+  call_parenthesis_token = @call_parenthesis_stack[-1]
+  call_noparenthesis_token = @call_noparenthesis_stack[-1]
+  if call_parenthesis_token && call_parenthesis_token[1] == @parenthesis_level
+    if call_noparenthesis_token && (
+        call_noparenthesis_token[-1] > call_parenthesis_token[-1] &&
+        @ss.pos > call_noparenthesis_token[-1]
+      )
+      @call_noparenthesis_stack.pop
+      @ss.pos -= text.size
+      [:CALL_END, ' ']
+    else
+      @parenthesis_level -= 1
+      @call_parenthesis_stack.pop
+      [:CALL_END, ')']
+    end
+  else
+    @parenthesis_level -= 1
+    [text, text]
+  end
                 }
                 \|\||&&|==|!=|<=|>=|\*\*                    {
   [text, text]
@@ -116,10 +141,20 @@ inner
     @parenthesis_level = 0
     @bracket_level = 0
     @brace_level = 0
+    @call_parenthesis_stack = []
+    @call_noparenthesis_stack = []
+
   end
 
   def next_token
-    return if @ss.eos?
+    if @ss.eos?
+      if @last_token && @last_token[0] != :NEWLINE
+        @last_token = _newline_action false
+        return @last_token
+      else
+        return
+      end
+    end
 
     token = nil
     while !@ss.eos?
@@ -146,7 +181,7 @@ inner
     tokens
   end
 
-  def _newline_action
+  def _newline_action backspace=true
     if !@last_token
       # skip the header blank line
       return nil
@@ -169,6 +204,12 @@ inner
       return nil
     end
 
+    call_token = @call_noparenthesis_stack.pop
+    if call_token
+      @ss.pos -= 1 if backspace
+      return [:CALL_END, "\n"]
+    end
+
     block_state = @block_stack.pop
     block_keywords = [:IF, :ELSE, :ELIF, :WHILE, :FUNCTION]
     if block_state && block_keywords.include?(block_state)
@@ -184,6 +225,19 @@ inner
     else
       @block_stack << symbol
       return [symbol, text]
+    end
+  end
+
+  def _call_begin_action token, text
+    if @last_token && (
+      @last_token[1] == ')' || @last_token[1] == ']' || @last_token[1] == '}' ||
+      @last_token[0] == :IDENTIFIER || @last_token[0] == :CONSTANT
+      )
+      @ss.pos -= text.size
+      @call_noparenthesis_stack << [:CALL_NO_PARENTHESIS, @ss.pos]
+      [:CALL_BEGIN, ' ']
+    else
+      token
     end
   end
 end
