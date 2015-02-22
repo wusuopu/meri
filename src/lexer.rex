@@ -125,7 +125,13 @@ rule
   [text, text]
                 }
 
-                {BLANK}           # no action
+                {BLANK}           {
+  if @ss.eos?
+    @last_token = _newline_action false
+  else
+    nil
+  end
+                }
                 .                 { [text, text] }
 
 
