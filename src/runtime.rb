@@ -21,6 +21,9 @@ module MERI
     def call method, args=[]
       @runtime_class.lookup(method).call(self, args)
     end
+    def print
+      Kernel.print(@ruby_value)
+    end
   end
 
   class MethodObject < BaseObject
@@ -67,6 +70,29 @@ module MERI
     end
   end
 
+  class ListObject < BaseObject
+    def print
+      Kernel.print('[')
+      @ruby_value.each_with_index do |value, index|
+        value.print
+        if index < @ruby_value.size - 1
+          Kernel.print(', ')
+        end
+      end
+      Kernel.print(']')
+    end
+  end
+  class ListClassObject < ClassObject
+    def initialize
+      super('List')
+    end
+    def new
+      ListObject.new self
+    end
+    def new_with_value value
+      ListObject.new self, value
+    end
+  end
   # init the runtime enviroment
   Constants = {}                             # the global constants
 
@@ -77,6 +103,8 @@ module MERI
   Constants['Number'] = ClassObject.new 'Number'
   Constants['String'] = ClassObject.new 'String'
   Constants['Object'] = ClassObject.new 'Object'
+  Constants['List'] = ListClassObject.new
+  Constants['Hash'] = ClassObject.new 'Hash'
 
   RootSelf = Constants['Object'].new
   RootContext = Context.new(RootSelf)        # the top level context
@@ -85,14 +113,17 @@ module MERI
   # built-in object
   Constants[true] = Constants['TrueClass'].new_with_value(true)
   Constants[false] = Constants['FalseClass'].new_with_value(false)
-  Constants[nil] = Constants['NilClass'].new_with_value('nil')
+  Constants[nil] = Constants['NilClass'].new_with_value(nil)
+  Constants[false].ruby_value = false
+  Constants[nil].ruby_value = nil
 
   # built-in method
   # TODO
   #Constants['say'] = MethodObject.new
   RootContext.locals['say'] = Proc.new{|receiver, args|
     args.each do |arg|
-      print(arg.ruby_value, " ")
+      arg.print
+      print(" ")
     end
     print("\n")
     Constants[nil]

@@ -58,8 +58,13 @@ rule
     NUMBER                              { result = NumberNode.new(val[0]) }
   | STRING                              { result = StringNode.new(val[0]) }
   ;
+  ListLiteral:
+    '[' ']'                             { result = ListNode.new([]) }
+  | '[' ArgList ']'                     { result = ListNode.new(val[1]) }
+  ;
   Literal:
     AlphaNumberic                       { result = val[0] }
+  | ListLiteral                         { result = val[0] }
   | TRUE                                { result = TrueNode.new() }
   | FALSE                               { result = FalseNode.new() }
   | NIL                                 { result = NilNode.new() }
@@ -144,7 +149,7 @@ rule
   ;
 
   Parenthetical:
-    '(' Expression ')'                        { result = val[1] }
+    '(' Expression ')'                  { result = val[1] }
   ;
 
 

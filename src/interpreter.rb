@@ -107,10 +107,13 @@ module MERI
     end
   end
 
-  # TODO
   class ListNode
     def eval context
-      
+      result = Constants['List'].new_with_value []
+      value.each do |v|
+        result.ruby_value << v.eval(context)
+      end
+      result
     end
   end
 end

@@ -88,7 +88,6 @@ module MERI
     end
   end
 
-  # TODO
-  class ListNode
+  class ListNode  < LiteralNode
   end
 end

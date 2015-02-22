@@ -73,16 +73,24 @@ rule
   [text, text]
                 }
                 {                 {
-  @brace_level += 1
-  _call_begin_action [text, text], text
+  current_pos = @ss.pos
+  res = _call_begin_action [text, text], text
+  if current_pos == @ss.pos
+    @brace_level += 1
+  end
+  res
                 }
                 }                 {
   @brace_level -= 1
   [text, text]
                 }
                 \[                {
-  @bracket_level += 1
-  _call_begin_action [text, text], text
+  current_pos = @ss.pos
+  res = _call_begin_action [text, text], text
+  if current_pos == @ss.pos
+    @bracket_level += 1
+  end
+  res
                 }
                 \]                {
   @bracket_level -= 1
