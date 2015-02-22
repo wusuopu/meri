@@ -90,4 +90,7 @@ module MERI
 
   class ListNode  < LiteralNode
   end
+
+  class HashNode  < LiteralNode
+  end
 end

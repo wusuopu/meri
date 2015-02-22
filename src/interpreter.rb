@@ -116,4 +116,17 @@ module MERI
       result
     end
   end
+
+  class HashNode
+    def eval context
+      result = Constants['Hash'].new_with_value({})
+      value.each do |k, v|
+        k = k.eval(context)
+        v = v.eval(context)
+        result.ruby_value[k.ruby_value] = v
+        result.hash_key[k.ruby_value] = k
+      end
+      result
+    end
+  end
 end

@@ -93,6 +93,37 @@ module MERI
       ListObject.new self, value
     end
   end
+
+  class HashObject < BaseObject
+    attr_accessor :hash_key
+    def initialize runtime_class, ruby_value=nil
+      super
+      @hash_key = {}
+    end
+    def print
+      Kernel.print('{')
+      @ruby_value.each_with_index do |value, index|
+        @hash_key[value[0]].print
+        Kernel.print(': ')
+        value[1].print
+        if index < @ruby_value.size - 1
+          Kernel.print(', ')
+        end
+      end
+      Kernel.print('}')
+    end
+  end
+  class HashClassObject < ClassObject
+    def initialize
+      super('Hash')
+    end
+    def new
+      HashObject.new self
+    end
+    def new_with_value value
+      HashObject.new self, value
+    end
+  end
   # init the runtime enviroment
   Constants = {}                             # the global constants
 
@@ -104,7 +135,7 @@ module MERI
   Constants['String'] = ClassObject.new 'String'
   Constants['Object'] = ClassObject.new 'Object'
   Constants['List'] = ListClassObject.new
-  Constants['Hash'] = ClassObject.new 'Hash'
+  Constants['Hash'] = HashClassObject.new
 
   RootSelf = Constants['Object'].new
   RootContext = Context.new(RootSelf)        # the top level context
@@ -140,6 +171,21 @@ module MERI
       result = receiver.ruby_value.send method, args[0].ruby_value
       Constants['String'].new_with_value(result)
     end
+  end
+
+  Constants['String'].define_method '[]' do |receiver, args|
+    result = receiver.ruby_value[args[0].ruby_value]
+    Constants['String'].new_with_value(result)
+  end
+  Constants['List'].define_method '[]' do |receiver, args|
+    receiver.ruby_value[args[0].ruby_value]
+  end
+  Constants['Hash'].define_method '[]' do |receiver, args|
+    receiver.ruby_value[args[0].ruby_value]
+  end
+  Constants['Hash'].define_method '[]=' do |receiver, args|
+    receiver.ruby_value[args[0].ruby_value] = args[1]
+    receiver.hash_key[args[0].ruby_value] = args[0]
   end
   #Constants['ARGV'] = []
   #ARGV.each do |v|

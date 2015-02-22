@@ -4,6 +4,7 @@ token IF ELSE ELIF
 token TRUE FALSE NIL
 token BLOCK_BEGIN BLOCK_END
 token CALL_BEGIN CALL_END
+token INDEX_BEGIN INDEX_END
 token CLASS WHILE RETURN
 token IDENTIFIER CONSTANT NUMBER STRING NEWLINE
 
@@ -62,9 +63,18 @@ rule
     '[' ']'                             { result = ListNode.new([]) }
   | '[' ArgList ']'                     { result = ListNode.new(val[1]) }
   ;
+  HashLiteral:
+    '{' '}'                             { result = HashNode.new({}) }
+  | '{' HashObjList '}'                 { result = HashNode.new(val[1]) }
+  ;
+  HashObjList:
+    Expression ':' Expression           { result = {val[0] => val[2]} }
+  | HashObjList ',' Expression ':' Expression                       { val[0][val[2]] = val[4]; result = val[0]; }
+  ;
   Literal:
     AlphaNumberic                       { result = val[0] }
   | ListLiteral                         { result = val[0] }
+  | HashLiteral                         { result = val[0] }
   | TRUE                                { result = TrueNode.new() }
   | FALSE                               { result = FalseNode.new() }
   | NIL                                 { result = NilNode.new() }
@@ -102,6 +112,8 @@ rule
   | Expression '|' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
   | Expression '&' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
   | Expression '^' Expression           { result = CallNode.new(val[0], val[1], [val[2]]) }
+  | Expression INDEX_BEGIN Expression INDEX_END                     { result = CallNode.new(val[0], '[]', [val[2]]) }
+  | Expression INDEX_BEGIN Expression INDEX_END '=' Expression      { result = CallNode.new(val[0], '[]=', [val[2], val[5]]) }
   | '!' Expression                      { result = CallNode.new(val[1], val[0], []) }
   ;
 

@@ -55,7 +55,7 @@ rule
                 [A-Z]\w*          {
   _call_begin_action [:CONSTANT, text], text
                 }
-                [-+]?(0|([1-9]\d*))(.\d+)?([eE][-+]?\d+)?   {
+                [-+]?(0|([1-9]\d*))(\.\d+)?([eE][-+]?\d+)?  {
   _call_begin_action [:NUMBER, text.to_f], text
                 }
                 "((\\")|([^"]))*" {
@@ -85,16 +85,34 @@ rule
   [text, text]
                 }
                 \[                {
-  current_pos = @ss.pos
-  res = _call_begin_action [text, text], text
-  if current_pos == @ss.pos
+  if @last_token && (
+    @last_token[1] == ')' || @last_token[1] == ']' || @last_token[1] == '}' ||
+    @last_token[0] == :IDENTIFIER || @last_token[0] == :CONSTANT
+    )
+    prev_pos = @ss.pos-2
+    if prev_pos >= 0 && @ss.string[prev_pos] == ' '
+      @ss.pos -= text.size
+      @call_noparenthesis_stack << [:CALL_NO_PARENTHESIS, @ss.pos]
+      [:CALL_BEGIN, ' ']
+    else
+      @bracket_level += 1
+      @index_stack << [@bracket_level, @ss.pos]
+      [:INDEX_BEGIN, '[']
+    end
+  else
     @bracket_level += 1
+    [text, text]
   end
-  res
                 }
                 \]                {
+  index_token = @index_stack[-1]
   @bracket_level -= 1
-  [text, text]
+  if index_token && index_token[0] == @bracket_level+1
+    @index_stack.pop
+    [:INDEX_END, ']']
+  else
+    [text, text]
+  end
                 }
                 \(                {
   @parenthesis_level += 1
@@ -157,6 +175,7 @@ inner
     @brace_level = 0
     @call_parenthesis_stack = []
     @call_noparenthesis_stack = []
+    @index_stack = []
 
   end
 
