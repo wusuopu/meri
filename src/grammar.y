@@ -5,7 +5,7 @@ token TRUE FALSE NIL
 token BLOCK_BEGIN BLOCK_END
 token CALL_BEGIN CALL_END
 token INDEX_BEGIN INDEX_END
-token CLASS WHILE RETURN
+token CLASS WHILE RETURN BREAK NEXT
 token IDENTIFIER CONSTANT NUMBER STRING NEWLINE
 
 # operator precedence
@@ -43,6 +43,8 @@ rule
 
   Statement:
     Return
+  | BREAK                               { result = BreakLoopNode.new }
+  | NEXT                                { result = NextLoopNode.new }
   ;
 
   Expression:

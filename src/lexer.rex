@@ -45,6 +45,12 @@ rule
                 nil               {
   [:NIL, text]
                 }
+                break             {
+  [:BREAK, text]
+                }
+                next              {
+  [:NEXT, text]
+                }
                 return            {
   [:RETURN, text]
                 }

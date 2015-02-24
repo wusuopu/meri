@@ -81,6 +81,9 @@ module MERI
       end
       Kernel.print(']')
     end
+    def << value
+      @ruby_value << value
+    end
   end
   class ListClassObject < ClassObject
     def initialize
@@ -166,6 +169,22 @@ module MERI
       Constants['Number'].new_with_value(result)
     end
   end
+  ['>', '>=', '<', '<=', '==', '!='].each do |method|
+    Constants['Number'].define_method method do |receiver, args|
+      if receiver.ruby_value.send method, args[0].ruby_value
+        Constants[true]
+      else
+        Constants[false]
+      end
+    end
+    Constants['String'].define_method method do |receiver, args|
+      if receiver.ruby_value.send method, args[0].ruby_value
+        Constants[true]
+      else
+        Constants[false]
+      end
+    end
+  end
   ['+', '*'].each do |method|
     Constants['String'].define_method method do |receiver, args|
       result = receiver.ruby_value.send method, args[0].ruby_value
@@ -174,22 +193,28 @@ module MERI
   end
 
   Constants['String'].define_method '[]' do |receiver, args|
-    result = receiver.ruby_value[args[0].ruby_value]
+    result = receiver.ruby_value[args[0].ruby_value] || ''
     Constants['String'].new_with_value(result)
   end
   Constants['List'].define_method '[]' do |receiver, args|
-    receiver.ruby_value[args[0].ruby_value]
+    receiver.ruby_value[args[0].ruby_value] || Constants[nil]
+  end
+  Constants['List'].define_method '[]=' do |receiver, args|
+    raise "list index out of range" if args[0].ruby_value >= receiver.ruby_value.size
+    receiver.ruby_value[args[0].ruby_value] = args[1]
   end
   Constants['Hash'].define_method '[]' do |receiver, args|
-    receiver.ruby_value[args[0].ruby_value]
+    receiver.ruby_value[args[0].ruby_value] || Constants[nil]
   end
   Constants['Hash'].define_method '[]=' do |receiver, args|
     receiver.ruby_value[args[0].ruby_value] = args[1]
     receiver.hash_key[args[0].ruby_value] = args[0]
   end
-  #Constants['ARGV'] = []
-  #ARGV.each do |v|
-    #Constants['ARGV'] << Constants['String'].new_with_value(v)
-  #end
+  RootContext.locals['ARGV'] = Constants['ARGV'] = Constants['List'].new_with_value []
+  if ARGV.size > 0
+    ARGV[1..-1].each do |v|
+      Constants['ARGV'] << Constants['String'].new_with_value(v)
+    end
+  end
 
 end

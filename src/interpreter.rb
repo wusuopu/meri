@@ -3,6 +3,7 @@
 
 require "parser"
 require "runtime"
+require "exception"
 
 module MERI
   class Interpreter
@@ -107,11 +108,37 @@ module MERI
     end
   end
 
+  class WhileNode
+    def eval context
+      while condition.eval(context).ruby_value
+        begin
+          body.eval context
+        rescue BreakLoopException
+          break
+        rescue NextLoopException
+          next
+        end
+      end
+    end
+  end
+
+  class BreakLoopNode
+    def eval context
+      raise BreakLoopException.new
+    end
+  end
+
+  class NextLoopNode
+    def eval context
+      raise NextLoopException.new
+    end
+  end
+
   class ListNode
     def eval context
       result = Constants['List'].new_with_value []
       value.each do |v|
-        result.ruby_value << v.eval(context)
+        result << v.eval(context)
       end
       result
     end

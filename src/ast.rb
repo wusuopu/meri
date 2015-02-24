@@ -43,6 +43,12 @@ module MERI
   class WhileNode < Struct.new(:condition, :body)
   end
 
+  class BreakLoopNode
+  end
+
+  class NextLoopNode
+  end
+
   class IfNode < Struct.new(:condition, :body, :else_body)
     def add_else else_body
       if self['else_body'].is_a? IfNode
