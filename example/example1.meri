@@ -1,0 +1,9 @@
+; This is a comment
+; define a function
+fun1 = (a, b)->
+  a1 = a + b
+  a1 * a1
+end
+
+say fun1 1, 2
+say ARGV

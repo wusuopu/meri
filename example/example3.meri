@@ -1,0 +1,12 @@
+i = 11
+while i > 0
+  i = i - 1
+  if i % 2 == 0
+    next
+  end
+  if i % 5 == 0
+    break
+  end
+  say i
+end
+

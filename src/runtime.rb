@@ -173,16 +173,16 @@ module MERI
   ['>', '>=', '<', '<=', '==', '!='].each do |method|
     Constants['Number'].define_method method do |receiver, args|
       if receiver.ruby_value.send method, args[0].ruby_value
-        Constants[true]
+        Constants['true']
       else
-        Constants[false]
+        Constants['false']
       end
     end
     Constants['String'].define_method method do |receiver, args|
       if receiver.ruby_value.send method, args[0].ruby_value
-        Constants[true]
+        Constants['true']
       else
-        Constants[false]
+        Constants['false']
       end
     end
   end
@@ -213,7 +213,7 @@ module MERI
   end
   RootContext.locals['ARGV'] = Constants['ARGV'] = Constants['List'].new_with_value []
   if ARGV.size > 0
-    ARGV[1..-1].each do |v|
+    ARGV.each do |v|
       Constants['ARGV'] << Constants['String'].new_with_value(v)
     end
   end

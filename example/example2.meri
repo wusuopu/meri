@@ -1,0 +1,6 @@
+l = [1, 2, "abc"]         ; List Object
+d = {"a": 1, "b": 2}      ; Hash Object
+l[1] = 0
+d['c'] = 3
+say l
+say d
