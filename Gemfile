@@ -8,3 +8,7 @@ group :development do
   gem 'guard'
   gem 'guard-shell'
 end
+
+group :test do
+  gem 'rake'
+end
