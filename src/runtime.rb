@@ -131,6 +131,8 @@ module MERI
   Constants = {}                             # the global constants
 
   # built-in object
+  Constants["Class"] = ClassObject.new
+  Constants["Class"].runtime_class = Constants["Class"]
   Constants['TrueClass'] = ClassObject.new 'TrueClass'
   Constants['FalseClass'] = ClassObject.new 'FalseClass'
   Constants['NilClass'] = ClassObject.new 'NilClass'
@@ -145,14 +147,13 @@ module MERI
 
 
   # built-in object
-  Constants[true] = Constants['TrueClass'].new_with_value(true)
-  Constants[false] = Constants['FalseClass'].new_with_value(false)
-  Constants[nil] = Constants['NilClass'].new_with_value(nil)
-  Constants[false].ruby_value = false
-  Constants[nil].ruby_value = nil
+  Constants['true'] = Constants['TrueClass'].new_with_value(true)
+  Constants['false'] = Constants['FalseClass'].new_with_value(false)
+  Constants['nil'] = Constants['NilClass'].new_with_value(nil)
+  Constants['false'].ruby_value = false
+  Constants['nil'].ruby_value = nil
 
   # built-in method
-  # TODO
   #Constants['say'] = MethodObject.new
   RootContext.locals['say'] = Proc.new{|receiver, args|
     args.each do |arg|

@@ -19,6 +19,8 @@ class ParserTest < Test::Unit::TestCase
     assert_equal Nodes.new([TrueNode.new()]), Parser.new.parse(' true ')
     assert_equal Nodes.new([FalseNode.new()]), Parser.new.parse(' false ')
     assert_equal Nodes.new([NilNode.new()]), Parser.new.parse(' nil ')
+    assert_equal Nodes.new([ListNode.new([NumberNode.new(1), NumberNode.new(2)])]), Parser.new.parse(' [1, 2] ')
+    assert_equal Nodes.new([HashNode.new({StringNode.new("a") => NumberNode.new(1), StringNode.new("b") => NumberNode.new(2)})]), Parser.new.parse(' {"a": 1, "b": 2} ')
   end
 
   def test_operation

@@ -37,13 +37,13 @@ rule
   [:BLOCK_END, text]
                 }
                 true              {
-  [:TRUE, text]
+  _call_begin_action [:TRUE, text], text
                 }
                 false             {
-  [:FALSE, text]
+  _call_begin_action [:FALSE, text], text
                 }
                 nil               {
-  [:NIL, text]
+  _call_begin_action [:NIL, text], text
                 }
                 break             {
   [:BREAK, text]

@@ -12,10 +12,10 @@ desc "Build program."
 task :build => [:racc, :rex] do
 end
 
-desc "Run testing."
-task :test do
-  Dir['test/*_test.rb'].each do |file|
-    puts "run '#{file}'..."
-    puts `bundle exec ruby #{file}`
-  end
+
+require "rake/testtask"
+
+Rake::TestTask.new do |t|
+  t.test_files = FileList['test/*_test.rb']
+  t.verbose = true
 end

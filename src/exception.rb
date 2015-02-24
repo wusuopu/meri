@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 #-*- coding:utf-8 -*-
 
-class BreakLoopException < Exception
-end
+module MERI
+  class BreakLoopException < Exception
+  end
 
-class NextLoopException < Exception
+  class NextLoopException < Exception
+  end
 end
