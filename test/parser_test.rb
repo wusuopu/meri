@@ -110,4 +110,15 @@ EOF
       CallNode.new(nil, ValueNode.new('say'), [ValueNode.new('a'), ValueNode.new('b')])
       ]), Parser.new.parse(code)
   end
+
+  def test_pipeinvocation
+    code = "fun1(1) |> fun2 |> say"
+    assert_equal Nodes.new([
+      CallNode.new(nil, ValueNode.new('say'), [
+        CallNode.new(nil, ValueNode.new('fun2'), [
+          CallNode.new(nil, ValueNode.new('fun1'), [NumberNode.new(1)])
+        ])
+      ])
+    ]), Parser.new.parse(code)
+  end
 end

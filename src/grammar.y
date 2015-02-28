@@ -12,6 +12,8 @@ token IDENTIFIER CONSTANT NUMBER STRING NEWLINE
 prechigh
   left    '.'
   right   '!'
+  right   '|>'
+  left    INDEX_BEGIN INDEX_END
   left    '**'
   left    '*' '/' '%'
   left    '+' '-'
@@ -152,6 +154,7 @@ rule
   Invocation:
     Value Arguments                     { result = CallNode.new(nil, val[0], val[1]) }
   | Invocation Arguments                { result = CallNode.new(nil, val[0], val[1]) }
+  | PipeInvocation                      { result = val[0] }
   ;
   Arguments:
     CALL_BEGIN CALL_END                 { result = [] }
@@ -160,6 +163,10 @@ rule
   ArgList:
     Expression                          { result = val }
   | ArgList ',' Expression              { result = val[0] << val[2] }
+  ;
+  PipeInvocation:
+    Expression '|>' Value          { result = CallNode.new(nil, val[2], [val[0]]) }
+  | PipeInvocation '|>' Value      { result = CallNode.new(nil, val[2], [val[0]]) }
   ;
 
   Parenthetical:
