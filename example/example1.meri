@@ -6,4 +6,8 @@ fun1 = (a, b)->
 end
 
 say fun1 1, 2
+fun1(1, 2) |> say
+
+
 say ARGV
+ARGV |> say
